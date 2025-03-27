@@ -8,9 +8,7 @@ def load_environment_file():
     """
     settings_module = os.environ.get('DJANGO_SETTINGS_MODULE', 'cpmp_project.settings.development')
     
-    if 'production' in settings_module:
-        env_file = '.env.production'
-    elif 'development' in settings_module:
+    if 'development' in settings_module:
         env_file = '.env.development'
     else:
         env_file = '.env'
