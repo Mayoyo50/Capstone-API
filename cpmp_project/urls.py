@@ -21,4 +21,5 @@ from debug_toolbar.toolbar import debug_toolbar_urls
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('users.urls')),
+    path('cron/', include('cron.urls')),
 ] + debug_toolbar_urls()
