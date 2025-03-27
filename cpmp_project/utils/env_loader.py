@@ -4,8 +4,12 @@ from dotenv import load_dotenv
 def load_environment_file():
     """
     Load the appropriate .env file based on the current environment.
-    Prioritizes explicitly set DJANGO_SETTINGS_MODULE.
+    Only loads .env files in development, skips in production.
     """
+    # Skip in production (Render sets RENDER environment variable)
+    if os.environ.get('RENDER') or os.environ.get('PYTHON_ENV') == 'production':
+        return
+        
     settings_module = os.environ.get('DJANGO_SETTINGS_MODULE', 'cpmp_project.settings.development')
     
     if 'development' in settings_module:
