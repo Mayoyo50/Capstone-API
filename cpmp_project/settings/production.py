@@ -1,6 +1,5 @@
 import os
 from .base import *
-import dj_database_url
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('SECRET_KEY')
@@ -10,7 +9,7 @@ DEBUG = False
 
 # Production hosts
 ALLOWED_HOSTS = [
-    os.environ.get('RENDER_HOSTNAME', 'app-name.onrender.com'),
+    os.environ.get('RENDER_HOSTNAME', 'capstone-api-issr.onrender.com'),
 ]
 
 # Security settings for production
@@ -23,7 +22,7 @@ SECURE_HSTS_PRELOAD = True
 
 # CORS settings for production
 CORS_ALLOWED_ORIGINS = [
-    os.environ.get('FRONTEND_URL', 'https://frontend-domain.com')
+    os.environ.get('FRONTEND_URL', 'https://capstone-7.netlify.app')
 ]
 CORS_ALLOW_ALL_ORIGINS = False
 
