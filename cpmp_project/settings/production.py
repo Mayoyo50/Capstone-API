@@ -22,7 +22,7 @@ SECURE_HSTS_PRELOAD = True
 
 # CORS settings for production
 CORS_ALLOWED_ORIGINS = [
-    os.environ.get('FRONTEND_URL', 'https://capstone-7.netlify.app')
+    os.environ.get('FRONTEND_URL', 'https://capstone-7.netlify.app'), "http://localhost:5173"
 ]
 CORS_ALLOW_ALL_ORIGINS = False
 

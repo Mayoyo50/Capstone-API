@@ -10,6 +10,9 @@ load_dotenv()
 SECRET_KEY =  os.getenv('SECRET_KEY')
 DEBUG =  os.getenv('DEBUG')
 DATABASE_URL =  os.getenv('DATABASE_URL')
+CLOUDINARY_NAME = os.getenv('CLOUDINARY_NAME')
+CLOUDINARY_API_KEY = os.getenv('CLOUDINARY_API_KEY')
+CLOUDINARY_API_SECRET = os.getenv('CLOUDINARY_API_SECRET')
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -27,10 +30,13 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'rest_framework_simplejwt',
+    'cloudinary',
+    'cloudinary_storage',
     
     # Local apps
     'users',
     'cron',
+    'user_project_management',
 ]
 
 MIDDLEWARE = [
@@ -149,3 +155,14 @@ INTERNAL_IPS = [
     "127.0.0.1",
     # ...
 ]
+
+# Cloudinary configuration
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': CLOUDINARY_NAME,
+    'API_KEY': CLOUDINARY_API_KEY,
+    'API_SECRET': CLOUDINARY_API_SECRET,
+    'SECURE':True
+}
+
+# File storage settings
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
