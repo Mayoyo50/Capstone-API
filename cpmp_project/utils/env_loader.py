@@ -9,13 +9,8 @@ def load_environment_file():
     # Skip in production (Render sets RENDER environment variable)
     if os.environ.get('RENDER') or os.environ.get('PYTHON_ENV') == 'production':
         return
-        
-    settings_module = os.environ.get('DJANGO_SETTINGS_MODULE', 'cpmp_project.settings.development')
-    
-    if 'development' in settings_module:
-        env_file = '.env.development'
     else:
-        env_file = '.env'
+        env_file = '.env.development'
     
     # Find the project root directory
     base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

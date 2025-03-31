@@ -37,7 +37,10 @@ config/settings/dev.py
 # OS-specific files
 .DS_Store
 Thumbs.db
+
+
 settings.txt
 notes.txt
 test.py
 test.txt
+env.txt

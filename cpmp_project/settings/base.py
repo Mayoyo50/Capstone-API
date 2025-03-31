@@ -6,7 +6,6 @@ import dj_database_url
 
 # Load environment variables from the appropriate .env file
 load_dotenv()
-# Debugging: Print loaded environment variables
 SECRET_KEY =  os.getenv('SECRET_KEY')
 DEBUG =  os.getenv('DEBUG')
 DATABASE_URL =  os.getenv('DATABASE_URL')
