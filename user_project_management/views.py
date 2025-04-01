@@ -1,81 +1,66 @@
-from rest_framework import generics, status
-from rest_framework.response import Response
-from rest_framework.parsers import MultiPartParser, JSONParser
-from .models import Project, ProjectFile
-from .serializers import ProjectSerializer
-from .permissions import CanCreateProject
-import mimetypes
 from rest_framework.views import APIView
+from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.exceptions import PermissionDenied
-from .models import ProjectFile
-import urllib.parse
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework import status
+from .models import Project, ProjectFile, Comment
+from .serializers import ProjectSerializer, ProjectFileSerializer, CommentSerializer
 
-class ProjectCreateView(generics.CreateAPIView):
-    queryset = Project.objects.all()
-    serializer_class = ProjectSerializer
-    permission_classes = [CanCreateProject]
-    parser_classes = [MultiPartParser, JSONParser]
-    
-    def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
-    
-    def create(self, request, *args, **kwargs):
-        data = request.data.dict()
-        files = request.FILES.getlist('files')
-        
-        serializer_data = {
-            'title': data.get('title'),
-            'description': data.get('description'),
-            'deadline': data.get('deadline'),
-        }
-        
-        serializer = self.get_serializer(data=serializer_data)
-        serializer.is_valid(raise_exception=True)
-        project = serializer.save()
-        
-        # Process and validate files
-        for file in files:
-            self._create_project_file(project, file)
-        
-        response_serializer = self.get_serializer(project)
-        headers = self.get_success_headers(response_serializer.data)
-        return Response(response_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-    
-    def _create_project_file(self, project, file):
-        """Helper method to create project files with validation"""
-        # Get file type
-        content_type = file.content_type
-        if not content_type:
-            content_type, _ = mimetypes.guess_type(file.name)
-        
-        ProjectFile.objects.create(
-            project=project,
-            file=file,
-            original_filename=file.name,
-            file_type=content_type,
-            file_size=file.size
-        )
-
-
-class ProjectFileAccessView(APIView):
+class ProjectCreateView(APIView):
     permission_classes = [IsAuthenticated]
-    
-    def get(self, request, pk):
+
+    def post(self, request):
+        serializer = ProjectSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            serializer.save(created_by=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ProjectListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        projects = Project.objects.filter(created_by=request.user)
+        serializer = ProjectSerializer(projects, many=True)
+        return Response(serializer.data)
+
+
+class UploadFileView(APIView):
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request, project_id):
         try:
-            file_obj = ProjectFile.objects.get(pk=pk)
-            
-            # Check if user has permission to access this file
-            if file_obj.project.created_by != request.user:
-                raise PermissionDenied("You don't have permission to access this file")
-            
-            # Return the Cloudinary URL
-            return Response({
-                'file_url': file_obj.file.url,
-                'filename': urllib.parse.quote(file_obj.original_filename),
-                'file_type': file_obj.file_type,
-                'file_size': file_obj.file_size
-            })
-        
-        except ProjectFile.DoesNotExist:
-            return Response({'error': 'File not found'}, status=status.HTTP_404_NOT_FOUND)
+            project = Project.objects.get(id=project_id, created_by=request.user)
+        except Project.DoesNotExist:
+            return Response({"error": "Project not found or you do not have permission."}, status=status.HTTP_404_NOT_FOUND)
+
+        files = request.FILES.getlist('files')  # Handle multiple files
+        if not files:
+            return Response({"error": "No files uploaded"}, status=status.HTTP_400_BAD_REQUEST)
+
+        uploaded_files = []
+        for file in files:
+            file_instance = ProjectFile(project=project, file=file)
+            file_instance.save()
+            serializer = ProjectFileSerializer(file_instance, context={'request': request})
+            uploaded_files.append(serializer.data)
+
+        return Response(uploaded_files, status=status.HTTP_201_CREATED)
+
+
+class AddCommentView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, project_id):
+        try:
+            project = Project.objects.get(id=project_id, created_by=request.user)
+        except Project.DoesNotExist:
+            return Response({"error": "Project not found or you do not have permission."}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = CommentSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            serializer.save(project=project, created_by=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

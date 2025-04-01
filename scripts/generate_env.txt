@@ -32,16 +32,10 @@ class EnvironmentGenerator:
             'SECRET_KEY': secret_key,
             'JWT_SECRET_KEY': jwt_secret_key,
             'DEBUG': 'False' if env_type == 'production' else 'True',
-            'ENV_TYPE': 'development' if env_type == 'development' else 'production',
             'DJANGO_SETTINGS_MODULE': f'cpmp_project.settings.{env_type}',
             
             # Database configuration
             'DATABASE_URL': database_url,  # Add DATABASE_URL here
-            'AIVEN_DB_NAME': db_name,
-            'AIVEN_DB_USER': db_user,
-            'AIVEN_DB_PASSWORD': db_password,
-            'AIVEN_DB_HOST': db_host,
-            'AIVEN_DB_PORT': db_port,
             
             # Additional production settings
             'RENDER_HOSTNAME': 'your-app-name.onrender.com',

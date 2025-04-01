@@ -1,12 +1,9 @@
-from django.views import View
-from django.http import JsonResponse
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt
+from rest_framework.response import Response
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
 
-@method_decorator(csrf_exempt, name='dispatch')
-class HealthCheckView(View):
-    def get(self, request, *args, **kwargs):
-        return JsonResponse({
-            "status": "success",
-            "message": "Service is running",
-        })
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def healthCheck(request):
+    is_live = {"status": "success", "message": "Service is running"}
+    return Response(is_live)

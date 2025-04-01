@@ -7,8 +7,8 @@ import dj_database_url
 # Load environment variables from the appropriate .env file
 load_dotenv()
 SECRET_KEY =  os.getenv('SECRET_KEY')
-DEBUG =  os.getenv('DEBUG')
 DATABASE_URL =  os.getenv('DATABASE_URL')
+DATABASE_PASSWORD =  os.getenv('DATABASE_PASSWORD')
 CLOUDINARY_NAME = os.getenv('CLOUDINARY_NAME')
 CLOUDINARY_API_KEY = os.getenv('CLOUDINARY_API_KEY')
 CLOUDINARY_API_SECRET = os.getenv('CLOUDINARY_API_SECRET')
@@ -33,15 +33,16 @@ INSTALLED_APPS = [
     'cloudinary_storage',
     
     # Local apps
-    'users',
+    'user',
+    'test_temp',
     'cron',
     'user_project_management',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -53,13 +54,11 @@ ROOT_URLCONF = 'cpmp_project.urls'
 
 # Use DATABASE_URL from environment variables
 DATABASES = {
-    'default': dj_database_url.config(
-        default=DATABASE_URL,
-        conn_max_age=1000,
-        ssl_require=False
-    )
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
 }
-
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -108,12 +107,13 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'  # For Render deployment
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Custom user model
-AUTH_USER_MODEL = 'users.User'
+AUTH_USER_MODEL = 'user.User'
 
 # REST Framework settings
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
@@ -154,6 +154,9 @@ INTERNAL_IPS = [
     "127.0.0.1",
     # ...
 ]
+
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOW_CREDENTIALS = True
 
 # Cloudinary configuration
 CLOUDINARY_STORAGE = {

@@ -7,6 +7,22 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'defaultdb',
+        'USER': 'avnadmin',
+        'PASSWORD': DATABASE_PASSWORD,
+        'HOST': 'capstone-capstone-33.c.aivencloud.com',
+        'PORT': 11911,
+        'OPTIONS': {
+            'sslmode': 'require',
+            'sslrootcert': os.path.join(BASE_DIR, 'ca.pem'), 
+        },
+    }
+}
+
+
 # Production hosts
 ALLOWED_HOSTS = [
     os.environ.get('RENDER_HOSTNAME', 'capstone-api-issr.onrender.com'),
@@ -24,7 +40,6 @@ SECURE_HSTS_PRELOAD = True
 CORS_ALLOWED_ORIGINS = [
     os.environ.get('FRONTEND_URL', 'https://capstone-7.netlify.app'), "http://localhost:5173"
 ]
-CORS_ALLOW_ALL_ORIGINS = False
 
 # Email settings (for production, configure your email service)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
