@@ -38,7 +38,7 @@ SECURE_HSTS_PRELOAD = True
 
 # CORS settings for production
 CORS_ALLOWED_ORIGINS = [
-    os.environ.get('FRONTEND_URL', 'https://capstone-7.netlify.app'), "http://localhost:5173"
+    os.environ.get('FRONTEND_URL'), "https://capstone-rho-nine.vercel.app","https://capstone-7.netlify.app"
 ]
 
 # Email settings (for production, configure your email service)
