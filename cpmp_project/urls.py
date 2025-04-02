@@ -7,6 +7,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/user/', include('user.urls')),
     path('cron/', include('cron.urls')),
-    path('api/projects/', include('user_project_management.urls')),
+    path('api/', include('user_project_management.urls')),
     path('', include('test_temp.urls')),
 ] + debug_toolbar_urls()

@@ -1,45 +1,124 @@
+# user_project_management/models.py
 from django.db import models
 from django.conf import settings
-from django.core.exceptions import ValidationError
-from django.utils import timezone
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.contrib.auth import get_user_model
+User = get_user_model()
+
+class Institute(models.Model):
+    name = models.CharField(max_length=200)
+    short_code = models.CharField(max_length=20)
+    
+    def __str__(self):
+        return self.name
+
+class UserProfile(models.Model):
+    ROLE_CHOICES = [
+        ('ADMIN', 'Admin'),
+        ('SUPERVISOR', 'Supervisor'),
+        ('CLIENT', 'Client'),
+        ('STUDENT', 'Student'),
+    ]
+    
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+    phone = models.CharField(max_length=20)
+    institute = models.ForeignKey(Institute, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        
+        # Ensure related objects exist based on role
+        if self.role == 'STUDENT' and not hasattr(self, 'student'):
+            Student.objects.create(user_profile=self, student_id=f"S{self.id}")
+        elif self.role == 'SUPERVISOR' and not hasattr(self, 'supervisor'):
+            Supervisor.objects.create(user_profile=self, department="Default Department")
+        elif self.role == 'CLIENT' and not hasattr(self, 'client'):
+            Client.objects.create(user_profile=self, company="Default Company")
+
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        # Create UserProfile with role matching user_type
+        user_profile = UserProfile.objects.create(
+            user=instance,
+            role=instance.user_type
+        )
+        
+        # Create related objects based on role
+        if instance.user_type == 'STUDENT':
+            Student.objects.create(user_profile=user_profile, student_id=f"S{user_profile.id}")
+        elif instance.user_type == 'SUPERVISOR':
+            Supervisor.objects.create(user_profile=user_profile, department="Default Department")
+        elif instance.user_type == 'CLIENT':
+            Client.objects.create(user_profile=user_profile, company="Default Company")
+
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    if hasattr(instance, 'userprofile'):
+        instance.userprofile.role = instance.user_type
+        instance.userprofile.save()
+
+class Client(models.Model):
+    user_profile = models.OneToOneField(UserProfile, on_delete=models.CASCADE)
+    company = models.CharField(max_length=200)
+    
+    def __str__(self):
+        return self.company
+
+class Supervisor(models.Model):
+    user_profile = models.OneToOneField(UserProfile, on_delete=models.CASCADE)
+    department = models.CharField(max_length=200)
+    
+    def __str__(self):
+        return self.user_profile.user.get_full_name()
+
+class Student(models.Model):
+    user_profile = models.OneToOneField(UserProfile, on_delete=models.CASCADE)
+    student_id = models.CharField(max_length=50)
+    
+    def __str__(self):
+        return f"{self.user_profile.user.get_full_name()} ({self.student_id})"
 
 class Project(models.Model):
-    title = models.CharField(max_length=255)
+    STATUS_CHOICES = [
+        ('PLANNING', 'Planning'),
+        ('IN_PROGRESS', 'In Progress'),
+        ('COMPLETE', 'Complete'),
+        ('OVERDUE', 'Overdue'),
+        ('PUBLISHED', 'Published'),
+    ]
+    
+    title = models.CharField(max_length=200)
     description = models.TextField()
-    deadline = models.DateField(null=True, blank=True)  # Optional field
-    field = models.CharField(max_length=255, null=True, blank=True)  # Optional field
-    categories = models.CharField(max_length=255, null=True, blank=True)  # Optional field
-    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='projects')
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def clean(self):
-        if self.deadline and self.deadline < timezone.now().date():
-            raise ValidationError({'deadline': 'The deadline cannot be in the past.'})
-
-    def save(self, *args, **kwargs):
-        # Call the clean method to validate before saving
-        self.clean()
-        super().save(*args, **kwargs)
-
+    client = models.ForeignKey(Client, on_delete=models.CASCADE)
+    institute = models.ForeignKey(Institute, on_delete=models.CASCADE)
+    supervisor = models.ForeignKey(Supervisor, on_delete=models.SET_NULL, null=True, blank=True)
+    students = models.ManyToManyField(Student)
+    start_date = models.DateField()
+    deadline = models.DateField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PLANNING')
+    completion_percentage = models.IntegerField(default=0)
+    
     def __str__(self):
         return self.title
 
-
-class ProjectFile(models.Model):
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='files')
-    file = models.FileField(upload_to='project_files/')
-    uploaded_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"File for {self.project.title}"
-
-
-class Comment(models.Model):
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='comments')
-    content = models.TextField()
-    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+class Ticket(models.Model):
+    TYPE_CHOICES = [
+        ('TECHNICAL', 'Technical'),
+        ('ADMINISTRATIVE', 'Administrative'),
+        ('URGENT', 'Urgent'),
+    ]
+    
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    created_by = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='created_tickets')
+    assigned_to = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='assigned_tickets')
     created_at = models.DateTimeField(auto_now_add=True)
-
+    due_date = models.DateField()
+    ticket_type = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    resolved = models.BooleanField(default=False)
+    
     def __str__(self):
-        return f"Comment by {self.created_by.username} on {self.project.title}"
+        return self.title
