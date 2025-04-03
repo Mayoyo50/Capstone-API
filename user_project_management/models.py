@@ -28,14 +28,6 @@ class UserProfile(models.Model):
     
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        
-        # Ensure related objects exist based on role
-        if self.role == 'STUDENT' and not hasattr(self, 'student'):
-            Student.objects.create(user_profile=self, student_id=f"S{self.id}")
-        elif self.role == 'SUPERVISOR' and not hasattr(self, 'supervisor'):
-            Supervisor.objects.create(user_profile=self, department="Default Department")
-        elif self.role == 'CLIENT' and not hasattr(self, 'client'):
-            Client.objects.create(user_profile=self, company="Default Company")
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
@@ -48,11 +40,14 @@ def create_user_profile(sender, instance, created, **kwargs):
         
         # Create related objects based on role
         if instance.user_type == 'STUDENT':
-            Student.objects.create(user_profile=user_profile, student_id=f"S{user_profile.id}")
+            if not hasattr(user_profile, 'student'):
+                Student.objects.create(user_profile=user_profile, student_id=f"S{user_profile.id}")
         elif instance.user_type == 'SUPERVISOR':
-            Supervisor.objects.create(user_profile=user_profile, department="Default Department")
+            if not hasattr(user_profile, 'supervisor'):
+                Supervisor.objects.create(user_profile=user_profile, department="Default Department")
         elif instance.user_type == 'CLIENT':
-            Client.objects.create(user_profile=user_profile, company="Default Company")
+            if not hasattr(user_profile, 'client'):
+                Client.objects.create(user_profile=user_profile, company="Default Company")
 
 @receiver(post_save, sender=User)
 def save_user_profile(sender, instance, **kwargs):
