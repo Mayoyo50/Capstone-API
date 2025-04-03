@@ -7,30 +7,6 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-DATABASES = {
-     'default': dj_database_url.config(
-         default=DATABASE_URL,
-         conn_max_age=1000,
-         ssl_require=True
-     )
- }
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'defaultdb',
-#         'USER': 'avnadmin',
-#         'PASSWORD': DATABASE_PASSWORD,
-#         'HOST': 'capstone-capstone-33.c.aivencloud.com',
-#         'PORT': 11911,
-#         'OPTIONS': {
-#             'sslmode': 'require',
-#             'sslrootcert': os.path.join(BASE_DIR, 'ca.pem'), 
-#         },
-#     }
-# }
-
-
 # Production hosts
 ALLOWED_HOSTS = [
     os.environ.get('RENDER_HOSTNAME', 'capstone-api-issr.onrender.com'),

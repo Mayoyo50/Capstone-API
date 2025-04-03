@@ -68,6 +68,12 @@ TEMPLATES = [
     },
 ]
 
+DATABASES = {
+     'default': dj_database_url.config(
+         default=DATABASE_URL
+     )
+ }
+
 WSGI_APPLICATION = 'cpmp_project.wsgi.application'
 
 # Password validation

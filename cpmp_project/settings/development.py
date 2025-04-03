@@ -1,5 +1,6 @@
 from .base import *
 
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -16,12 +17,18 @@ INSTALLED_APPS += [
     'debug_toolbar',
 ]
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
+# DATABASES= {
+#      'default': dj_database_url.config(
+#          default='postgresql://capstone_postgres_4lxq_user:nafh7vWMoPKJzNvsx1YEh5QvOL1Ab5kq@dpg-cvn6b3idbo4c73bfgk80-a.oregon-postgres.render.com/capstone_postgres_4lxq'
+#      )
+#  }
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 
 # Add Debug Toolbar middleware
 MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
